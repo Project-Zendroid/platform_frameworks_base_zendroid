@@ -441,6 +441,13 @@ void VulkanManager::setupDevice(skgpu::VulkanExtensions& grExtensions,
             nullptr,                               // ppEnabledFeatures
     };
 
+    if (VK_ERROR_NOT_PERMITTED_KHR == mCreateDevice(mPhysicalDevice, &deviceInfo,
+                                                   nullptr, &mDevice)) {
+        ALOGW("Queue priority high is not permitted by the driver, \
+               Retrying with medium priority");
+        queuePriorityCreateInfo.globalPriority = VK_QUEUE_GLOBAL_PRIORITY_MEDIUM_EXT;
+    }
+
     LOG_ALWAYS_FATAL_IF(mCreateDevice(mPhysicalDevice, &deviceInfo, nullptr, &mDevice));
 
     GET_DEV_PROC(AllocateCommandBuffers);
