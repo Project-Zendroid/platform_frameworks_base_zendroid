@@ -2725,6 +2725,11 @@ final class ActivityRecord extends WindowToken {
             return;
         }
 
+        if (mStartingData != null
+                && mStartingData.mRemoveAfterTransaction == AFTER_TRANSITION_FINISH) {
+            return;
+        }
+
         if (transferSplashScreenIfNeeded()) {
             return;
         }
@@ -4543,6 +4548,10 @@ final class ActivityRecord extends WindowToken {
                         mStartingData.mRemoveAfterTransaction = AFTER_TRANSACTION_IDLE;
                         mStartingData.mPrepareRemoveAnimation = false;
                     }
+                }
+
+                if (mStartingData.mRemoveAfterTransaction == AFTER_TRANSITION_FINISH) {
+                    mStartingData.mRemoveAfterTransaction = AFTER_TRANSACTION_IDLE;
                 }
 
                 ProtoLog.v(WM_DEBUG_ADD_REMOVE,
