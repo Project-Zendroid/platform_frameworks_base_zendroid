@@ -187,6 +187,7 @@ import com.android.server.job.JobSchedulerService;
 import com.android.server.lights.LightsService;
 import com.android.server.locales.LocaleManagerService;
 import com.android.server.location.LocationManagerService;
+import com.android.server.location.LocationControlService;
 import com.android.server.location.altitude.AltitudeService;
 import com.android.server.locksettings.LockSettingsService;
 import com.android.server.logcat.LogcatManagerService;
@@ -2328,6 +2329,10 @@ public final class SystemServer implements Dumpable {
 
             t.traceBegin("StartLocationManagerService");
             mSystemServiceManager.startService(LocationManagerService.Lifecycle.class);
+            t.traceEnd();
+
+            t.traceBegin("StartLocationControlService");
+            mSystemServiceManager.startService(LocationControlService.class);
             t.traceEnd();
 
             t.traceBegin("StartCountryDetectorService");

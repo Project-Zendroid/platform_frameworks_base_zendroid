@@ -147,6 +147,7 @@ import com.android.server.location.provider.MockLocationProvider;
 import com.android.server.location.provider.PassiveLocationProvider;
 import com.android.server.location.provider.PassiveLocationProviderManager;
 import com.android.server.location.provider.StationaryThrottlingLocationProvider;
+import com.android.server.location.provider.StaticLocationProvider;
 import com.android.server.location.provider.proxy.ProxyGeocodeProvider;
 import com.android.server.location.provider.proxy.ProxyLocationProvider;
 import com.android.server.location.provider.proxy.ProxyPopulationDensityProvider;
@@ -530,6 +531,19 @@ public class LocationManagerService extends ILocationManager.Stub implements
                     GPS_PROVIDER, mPassiveManager);
             addLocationProviderManager(gnssManager, gnssProvider);
         }
+
+            // initialize static location provider
+            final StaticLocationProvider staticLocationProvider =
+                new StaticLocationProvider(FgThread.getExecutor());
+            LocationProviderManager staticManager = new LocationProviderManager(
+                mContext, mInjector, "static", mPassiveManager);
+            addLocationProviderManager(staticManager, staticLocationProvider);
+            LocalServices.addService(StaticLocationProvider.class, staticLocationProvider);
+
+            LocationControlService controlService = LocalServices.getService(LocationControlService.class);
+            if (controlService != null) {
+                controlService.setStaticLocationProvider(staticLocationProvider);
+            }
 
         // bind to geocoder provider
         mGeocodeProvider = ProxyGeocodeProvider.createAndRegister(mContext);
