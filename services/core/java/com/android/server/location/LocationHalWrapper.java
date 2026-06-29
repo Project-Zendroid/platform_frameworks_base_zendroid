@@ -47,6 +47,15 @@ public final class LocationHalWrapper {
         return getHal().getLongitude();
     }
 
+    /**
+     * Asks the vendor HAL to persist a new static location. The HAL owns the
+     * vendor data store, so the framework never writes vendor data files itself.
+     */
+    public void setLocation(double latitudeDegrees, double longitudeDegrees)
+            throws RemoteException {
+        getHal().setLocation(latitudeDegrees, longitudeDegrees);
+    }
+
     private ILocationHal getHal() throws RemoteException {
         if (mHal == null) {
             final IBinder binder = ServiceManager.waitForService(HAL_SERVICE);

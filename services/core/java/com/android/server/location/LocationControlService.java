@@ -18,19 +18,12 @@ package com.android.server.location;
 
 import android.Manifest;
 import android.content.Context;
-import android.util.Log;
 
 import com.android.server.LocalServices;
 import com.android.server.SystemService;
 import com.android.server.location.provider.StaticLocationProvider;
 
 import android.location.ILocationControlService;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Service for controlling static location provider.
@@ -40,10 +33,9 @@ import java.nio.charset.StandardCharsets;
  */
 public final class LocationControlService extends SystemService {
 
-    private static final String TAG = "LocationControlService";
     private static final String SERVICE_NAME = "location_control";
-    private static final String CONFIG_PATH = "/data/vendor/location/location.conf";
 
+    private final LocationHalWrapper mHalWrapper = new LocationHalWrapper();
     private StaticLocationProvider mStaticLocationProvider;
 
     public LocationControlService(Context context) {
@@ -83,7 +75,7 @@ public final class LocationControlService extends SystemService {
 
             validateCoordinates(lat, lon);
 
-            writeConfig(lat, lon);
+            mHalWrapper.setLocation(lat, lon);
 
             StaticLocationProvider provider = getStaticLocationProvider();
             if (provider != null) {
@@ -104,50 +96,6 @@ public final class LocationControlService extends SystemService {
             if (lon < -180.0 || lon > 180.0) {
                 throw new android.os.RemoteException(
                         "Longitude out of range [-180.0, 180.0]: " + lon);
-            }
-        }
-
-        private void writeConfig(double lat, double lon) {
-            FileOutputStream fos = null;
-            OutputStreamWriter writer = null;
-
-            try {
-                File configFile = new File(CONFIG_PATH);
-                File parentDir = configFile.getParentFile();
-                if (parentDir == null) {
-                    throw new IOException("Config path has no parent directory: " + CONFIG_PATH);
-                }
-                if (!parentDir.exists()) {
-                    throw new IOException("Missing config parent directory: "
-                            + parentDir + ". It must be created and SELinux-labeled by init or "
-                            + "the HAL before LocationControlService writes the config");
-                }
-                if (!parentDir.isDirectory()) {
-                    throw new IOException("Config parent path is not a directory: " + parentDir);
-                }
-
-                fos = new FileOutputStream(configFile, false);
-                writer = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
-
-                writer.write("lat=" + lat + "\n");
-                writer.write("lon=" + lon + "\n");
-
-                writer.flush();
-                fos.flush();
-                fos.getFD().sync();
-
-                Log.d(TAG, "Wrote location config");
-            } catch (IOException e) {
-                Log.e(TAG, "Failed to write location config", e);
-            } finally {
-                try {
-                    if (writer != null) {
-                        writer.close();
-                    } else if (fos != null) {
-                        fos.close();
-                    }
-                } catch (IOException ignored) {
-                }
             }
         }
     }
