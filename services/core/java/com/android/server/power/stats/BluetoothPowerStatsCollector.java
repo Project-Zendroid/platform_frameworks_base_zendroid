@@ -18,6 +18,7 @@ package com.android.server.power.stats;
 import android.annotation.Nullable;
 import android.bluetooth.BluetoothActivityEnergyInfo;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothStatusCodes;
 import android.bluetooth.UidTraffic;
 import android.content.pm.PackageManager;
 import android.hardware.power.stats.EnergyConsumerType;
@@ -178,6 +179,16 @@ public class BluetoothPowerStatsCollector extends PowerStatsCollector {
 
                     @Override
                     public void onBluetoothActivityEnergyInfoError(int error) {
+                        if (error == BluetoothStatusCodes.FEATURE_NOT_SUPPORTED) {
+                            // The controller does not expose tx/rx/idle and energy
+                            // counters. That is a permanent property of the hardware,
+                            // not a failure, so report "no data" instead of throwing:
+                            // throwing here logs a stack trace and a
+                            // "Cannot acquire BluetoothActivityEnergyInfo" error on
+                            // every collection cycle (~every 10 minutes).
+                            immediateFuture.complete(null);
+                            return;
+                        }
                         immediateFuture.completeExceptionally(
                                 new RuntimeException("error: " + error));
                     }
