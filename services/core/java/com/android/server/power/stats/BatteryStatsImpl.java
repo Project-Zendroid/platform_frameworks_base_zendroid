@@ -15274,6 +15274,12 @@ public class BatteryStatsImpl extends BatteryStats {
             }
         }
         mLastLearnedBatteryCapacityUah = chargeFullUah;
+        if (chargeFullUah > 0) {
+            // Prefer the full charge capacity reported by the battery HAL over
+            // the static PowerProfile value, which may be a reference-board
+            // default. Fall back to PowerProfile when it is not available.
+            mEstimatedBatteryCapacityMah = chargeFullUah / 1000;
+        }
         if (mMinLearnedBatteryCapacityUah == -1) {
             mMinLearnedBatteryCapacityUah = chargeFullUah;
         } else {
