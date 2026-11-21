@@ -33,6 +33,7 @@ import com.android.systemui.globalactions.GlobalActionsDialogLite
 import com.android.systemui.plugins.ActivityStarter
 import com.android.systemui.plugins.FalsingManager
 import com.android.systemui.qs.dagger.QSFlagsModule.PM_LITE_ENABLED
+import com.android.systemui.qs.footer.domain.interactor.QsScreenshotController
 import com.android.systemui.qs.footer.data.model.UserSwitcherStatusModel
 import com.android.systemui.qs.footer.domain.interactor.FooterActionsInteractor
 import com.android.systemui.qs.footer.domain.model.SecurityButtonConfig
@@ -86,6 +87,7 @@ class FooterActionsViewModel(
      * function must be cancelled when that fragment is destroyed.
      */
     val observeDeviceMonitoringDialogRequests: suspend (quickSettingsContext: Context) -> Unit,
+    val takeScreenshot: (collapseShade: Boolean) -> Unit = {},
 ) {
     /** The alpha the UI rendering this ViewModel should have. */
     private val _alpha = MutableStateFlow(1f)
@@ -121,6 +123,7 @@ class FooterActionsViewModel(
         private val shadeModeInteractor: ShadeModeInteractor,
         private val globalActionsDialogLiteProvider: Provider<GlobalActionsDialogLite>,
         private val activityStarter: ActivityStarter,
+        private val screenshotController: QsScreenshotController,
         @Named(PM_LITE_ENABLED) private val showPowerButton: Boolean,
     ) {
         /** Create a [FooterActionsViewModel] bound to the lifecycle of [lifecycleOwner]. */
@@ -149,6 +152,7 @@ class FooterActionsViewModel(
                 globalActionsDialogLite,
                 activityStarter,
                 showPowerButton,
+                screenshotController::requestScreenshot,
             )
         }
 
@@ -174,6 +178,7 @@ class FooterActionsViewModel(
                 globalActionsDialogLite,
                 activityStarter,
                 showPowerButton,
+                screenshotController::requestScreenshot,
             )
         }
     }
@@ -187,6 +192,7 @@ fun createFooterActionsViewModel(
     globalActionsDialogLite: GlobalActionsDialogLite,
     activityStarter: ActivityStarter,
     showPowerButton: Boolean,
+    takeScreenshot: (Boolean) -> Unit = {},
 ): FooterActionsViewModel {
     suspend fun observeDeviceMonitoringDialogRequests(quickSettingsContext: Context) {
         footerActionsInteractor.deviceMonitoringDialogRequests.collect {
@@ -286,6 +292,11 @@ fun createFooterActionsViewModel(
         }
 
     return FooterActionsViewModel(
+        takeScreenshot = { collapseShade ->
+            if (!falsingManager.isFalseTap(FalsingManager.LOW_PENALTY)) {
+                takeScreenshot(collapseShade)
+            }
+        },
         security = security,
         foregroundServices = foregroundServices,
         userSwitcher = userSwitcher,

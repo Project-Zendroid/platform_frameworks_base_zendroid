@@ -98,6 +98,7 @@ val Kosmos.footerActionsViewModelFactory by Fixture {
         shadeModeInteractor = shadeModeInteractor,
         globalActionsDialogLiteProvider = { mock() },
         activityStarter,
+        screenshotController = mock(),
         showPowerButton = true,
     )
 }

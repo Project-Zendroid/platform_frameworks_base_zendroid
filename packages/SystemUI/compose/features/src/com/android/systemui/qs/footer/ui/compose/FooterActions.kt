@@ -23,6 +23,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.indication
@@ -60,6 +62,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -227,6 +230,7 @@ fun FooterActions(
                 useModifierBasedExpandable,
                 Modifier.sysuiResTag("multi_user_switch"),
             )
+            ScreenshotButton(viewModel.takeScreenshot)
             IconButton(
                 { viewModel.settings },
                 useModifierBasedExpandable,
@@ -234,6 +238,32 @@ fun FooterActions(
             )
             IconButton({ power }, useModifierBasedExpandable, Modifier.sysuiResTag("pm_lite"))
         }
+    }
+}
+
+/** Same touch target and colors as the adjacent footer actions. */
+@Composable
+private fun ScreenshotButton(takeScreenshot: (Boolean) -> Unit) {
+    Box(
+        Modifier.padding(4.dp)
+            .clip(CircleShape)
+            .background(colorAttr(R.attr.shadeInactive))
+            .combinedClickable(
+                role = Role.Button,
+                onClick = { takeScreenshot(true) },
+                onLongClick = { takeScreenshot(false) },
+            )
+            .size(40.dp)
+            .borderOnFocus(MaterialTheme.colorScheme.secondary, CornerSize(percent = 50))
+            .sysuiResTag("screenshot_button"),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painterResource(com.android.internal.R.drawable.ic_screenshot),
+            contentDescription = stringResource(R.string.global_action_screenshot),
+            modifier = Modifier.size(20.dp),
+            tint = colorAttr(R.attr.onShadeInactiveVariant),
+        )
     }
 }
 
