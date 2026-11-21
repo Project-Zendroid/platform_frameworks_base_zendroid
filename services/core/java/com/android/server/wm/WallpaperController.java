@@ -1031,8 +1031,15 @@ class WallpaperController {
             Slog.w(TAG_WM, "Failed to screenshot wallpaper");
             return null;
         }
-        return Bitmap.wrapHardwareBuffer(
+        final Bitmap bitmap = Bitmap.wrapHardwareBuffer(
                 wallpaperBuffer.getHardwareBuffer(), wallpaperBuffer.getColorSpace());
+        // The wrapped Bitmap keeps its own reference to the buffer, so the
+        // HardwareBuffer must be closed here. Not closing it leaks the buffer
+        // until GC runs the finalizer, which trips
+        // StrictMode.LeakedClosableViolation ("Explicit termination method
+        // 'HardwareBuffer.close' not called") on every wallpaper screenshot.
+        wallpaperBuffer.getHardwareBuffer().close();
+        return bitmap;
     }
 
     /**
